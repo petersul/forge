@@ -1,11 +1,13 @@
 package forge.gamemodes.match.input;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
+import com.google.common.collect.Lists;
+import forge.ai.ComputerUtilCard;
+import forge.ai.ComputerUtilMana;
+import forge.game.card.CardCollection;
+import forge.util.Localizer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 import forge.card.ColorSet;
@@ -45,13 +47,19 @@ public final class InputSelectCardsForConvokeOrImprovise extends InputSelectMany
     }
 
     @Override
+    public void updateButtons() {
+        Localizer localizer = Localizer.getInstance();
+        getController().getGui().updateButtons(getOwner(), localizer.getMessage("lblOk"), localizer.getMessage("lblAuto"), true, true, true);
+    }
+
+    @Override
     protected String getMessage() {
-	StringBuilder sb = new StringBuilder();
-        if ( FModel.getPreferences().getPrefBoolean(ForgePreferences.FPref.UI_DETAILED_SPELLDESC_IN_PROMPT) &&
-	     sa != null ) {
-	    sb.append(sa.getStackDescription()).append("\n");
-	}
-	sb.append(TextUtil.concatNoSpace("Choose ", cardType, " to tap for ", description, ".\nRemaining mana cost is ", remainingCost.toString()));
+        StringBuilder sb = new StringBuilder();
+        if (FModel.getPreferences().getPrefBoolean(ForgePreferences.FPref.UI_DETAILED_SPELLDESC_IN_PROMPT) &&
+                sa != null) {
+            sb.append(sa.getStackDescription()).append("\n");
+        }
+        sb.append(TextUtil.concatNoSpace("Choose ", cardType, " to tap for ", description, ".\nRemaining mana cost is ", remainingCost.toString()));
         return sb.toString();
     }
 
@@ -131,7 +139,29 @@ public final class InputSelectCardsForConvokeOrImprovise extends InputSelectMany
 
     @Override
     public Collection<Card> getSelected() {
-        // TODO Auto-generated method stub
         return chosenCards.keySet();
+    }
+
+    @Override
+    protected void onCancel() {
+        // Auto choose a bunch of things to select
+        CardCollection available = (CardCollection) availableCards;
+
+        if (improvise) {
+            // SOrt by worst artifact. Which we don't have a great way of doing right now
+        } else {
+            ComputerUtilCard.sortByEvaluateCreature(available);
+            Lists.reverse(available);
+        }
+
+        Set<Card> convoked = ComputerUtilMana.getConvokeOrImproviseFromList(remainingCost.toManaCost(), available, improvise).keySet();
+
+        for(Card card : convoked) {
+            onCardSelected(card, null, null);
+        }
+
+        refresh();
+
+        //this.onOk();
     }
 }

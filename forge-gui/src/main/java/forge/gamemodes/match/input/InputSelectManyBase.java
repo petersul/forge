@@ -80,11 +80,15 @@ public abstract class InputSelectManyBase<T extends GameEntity> extends InputSyn
                 showMessage(getMessage());
             }
         }
+        updateButtons();
+    }
+
+    public void updateButtons() {
         getController().getGui().updateButtons(getOwner(), hasEnoughTargets(), allowCancel, true);
     }
 
     @Override
-    protected final void onCancel() {
+    protected void onCancel() {
         bCancelled = true;
         resetUsedToPay();
         this.getSelected().clear();
