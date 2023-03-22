@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.utils.Array;
 import forge.Forge;
+import forge.adventure.PreviousLocation;
 import forge.adventure.data.DialogData;
 import forge.adventure.data.EffectData;
 import forge.adventure.data.EnemyData;
@@ -42,12 +43,8 @@ public class EnemySprite extends CharacterSprite {
     public LinkedList<MovementBehavior> movementBehaviors = new LinkedList<>();
 
     public Vector2 targetVector;
-    private final Vector2 _previousPosition = new Vector2();
-    private final Vector2 _previousPosition2 = new Vector2();
-    private final Vector2 _previousPosition3 = new Vector2();
-    private final Vector2 _previousPosition4 = new Vector2();
-    private final Vector2 _previousPosition5 = new Vector2();
-    private final Vector2 _previousPosition6 = new Vector2();
+
+    private final PreviousLocation previousLocations = new PreviousLocation(6);
     private final Float _movementTimeout = 150.0f;
     private boolean _freeze = false; //freeze movement after defeating player
     public float unfreezeRange = 30.0f;
@@ -99,7 +96,9 @@ public class EnemySprite extends CharacterSprite {
 
     public void freezeMovement(){
         _freeze = true;
-        setPosition(_previousPosition6.x, _previousPosition6.y);
+
+        final Vector2 oldestPosition = previousLocations.peek();
+        setPosition(oldestPosition.x, oldestPosition.y);
         targetVector.setZero();
         // This will move the enemy back a few frames of movement.
         // Combined with player doing the same, should no longer be colliding to immediately re-enter battle if mob still present
@@ -135,8 +134,9 @@ public class EnemySprite extends CharacterSprite {
         }
 
         if (movementBehaviors.size() > 0){
+            final Vector2 oldestPosition = previousLocations.peek();
 
-            if (movementBehaviors.peek().getDuration() == 0 && target.equals(_previousPosition6) && timer >= _movementTimeout)
+            if (movementBehaviors.peek().getDuration() == 0 && target.equals(oldestPosition) && timer >= _movementTimeout)
             {
                 //stationary in an untimed behavior, move on to next behavior attempt to get unstuck
                 if (movementBehaviors.size() > 1) {
@@ -170,14 +170,8 @@ public class EnemySprite extends CharacterSprite {
         else target = Vector2.Zero;
         return target;
     }
-    public void updatePositon()
-    {
-        _previousPosition6.set(_previousPosition5);
-        _previousPosition5.set(_previousPosition4);
-        _previousPosition4.set(_previousPosition3);
-        _previousPosition3.set(_previousPosition2);
-        _previousPosition2.set(_previousPosition);
-        _previousPosition.set(pos());
+    public void updatePosition() {
+        previousLocations.add(pos());
     }
 
 

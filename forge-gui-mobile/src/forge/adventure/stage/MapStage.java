@@ -33,6 +33,7 @@ import com.github.tommyettinger.textra.TextraLabel;
 import com.github.tommyettinger.textra.TypingAdapter;
 import com.github.tommyettinger.textra.TypingLabel;
 import forge.Forge;
+import forge.adventure.PreviousLocation;
 import forge.adventure.character.*;
 import forge.adventure.data.*;
 import forge.adventure.pointofintrest.PointOfInterestChanges;
@@ -68,10 +69,8 @@ public class MapStage extends GameStage {
     MapLayer spriteLayer;
     private PointOfInterestChanges changes;
     private EnemySprite currentMob;
-    private final Vector2 oldPosition = new Vector2();//todo
-    private final Vector2 oldPosition2 = new Vector2();
-    private final Vector2 oldPosition3 = new Vector2();
-    private final Vector2 oldPosition4 = new Vector2();
+    private final PreviousLocation previousLocation = new PreviousLocation(4);
+
     private boolean isLoadingMatch = false;
     //private HashMap<String, Byte> mapFlags = new HashMap<>(); //Stores local map flags. These aren't available outside this map.
 
@@ -815,7 +814,7 @@ public class MapStage extends GameStage {
             startPause(0.3f, () -> {
                 player.setAnimation(CharacterSprite.AnimationTypes.Idle);
                 currentMob.setAnimation(CharacterSprite.AnimationTypes.Idle);
-                player.setPosition(oldPosition4);
+                player.setPosition(previousLocation.peek());
                 currentMob.freezeMovement();
                 boolean defeated = Current.player().defeated();
                 if (canFailDungeon && defeated)
@@ -919,7 +918,7 @@ public class MapStage extends GameStage {
         Iterator<EnemySprite> it = enemies.iterator();
         while (it.hasNext()) {
             EnemySprite mob = it.next();
-            mob.updatePositon();
+            mob.updatePosition();
             mob.targetVector = mob.getTargetVector(player, delta);
             Vector2 currentVector = new Vector2(mob.targetVector);
             mob.clearActions();
@@ -954,10 +953,7 @@ public class MapStage extends GameStage {
 
         float sprintingMod = currentModifications.containsKey(PlayerModification.Sprint) ? 2 : 1;
         player.setMoveModifier(2 * sprintingMod);
-        oldPosition4.set(oldPosition3);
-        oldPosition3.set(oldPosition2);
-        oldPosition2.set(oldPosition);
-        oldPosition.set(player.pos());
+        previousLocation.add(player.pos());
         for (MapActor actor : new Array.ArrayIterator<>(actors)) {
             if (actor.collideWithPlayer(player)) {
                 if (actor instanceof EnemySprite) {
@@ -1053,7 +1049,7 @@ public class MapStage extends GameStage {
     }
 
     public void resetPosition() {
-        player.setPosition(oldPosition4);
+        player.setPosition(previousLocation.peek());
         stop();
     }
 

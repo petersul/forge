@@ -70,7 +70,9 @@ public class CardZoom extends FOverlay {
         activateHandler = activateHandler0;
         currentIndex = currentIndex0;
         initialIndex = currentIndex0;
-        currentCard = getCardView(items.get(currentIndex));
+
+        // This is a crash
+        currentCard = currentIndex >= 0 ? getCardView(items.get(currentIndex)) : null;
         prevCard = currentIndex > 0 ? getCardView(items.get(currentIndex - 1)) : null;
         nextCard = currentIndex < items.size() - 1 ? getCardView(items.get(currentIndex + 1)) : null;
         onCardChanged();
