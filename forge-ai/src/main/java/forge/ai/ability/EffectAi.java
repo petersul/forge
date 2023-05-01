@@ -31,6 +31,7 @@ import forge.game.player.Player;
 import forge.game.spellability.SpellAbility;
 import forge.game.spellability.SpellAbilityStackInstance;
 import forge.game.spellability.TargetRestrictions;
+import forge.game.staticability.StaticAbilityCantAttackBlock;
 import forge.game.zone.ZoneType;
 import forge.util.MyRandom;
 
@@ -154,6 +155,60 @@ public class EffectAi extends SpellAbilityAi {
                         }
                     });
                     if (comp.size() < 2) {
+                        continue;
+                    }
+                    final List<Card> attackers = comp;
+                    human = CardLists.filter(human, new Predicate<Card>() {
+                        @Override
+                        public boolean apply(final Card c) {
+                            return CombatUtil.canBlockAtLeastOne(c, attackers);
+                        }
+                    });
+                    if (human.isEmpty()) {
+                        continue;
+                    }
+
+                    shouldPlay = true;
+                    break;
+                }
+
+                return shouldPlay;
+            } else if (logic.equals("Unblockable")) {
+                if (!phase.isPlayerTurn(ai)) {
+                    return false;
+                }
+
+                if (!phase.getPhase().isBefore(PhaseType.COMBAT_DECLARE_ATTACKERS)) {
+                    // Ideally this would be "no more combat phases left
+                    return false;
+                }
+
+                boolean shouldPlay = false;
+                List<Card> comp = ai.getCreaturesInPlay();
+
+                // Filter out all AI creatures that can't attack or are already fully unblockable
+                comp = CardLists.filter(comp, new Predicate<Card>() {
+                    @Override
+                    public boolean apply(final Card c) {
+                        return !StaticAbilityCantAttackBlock.cantBlockBy(c, null) || !CombatUtil.canAttack(c, null);
+                    }
+                });
+
+                if (comp.size() == 0) {
+                    return false;
+                }
+
+                for (final Player opp : ai.getOpponents()) {
+                    List<Card> human = opp.getCreaturesInPlay();
+
+                    // only count creatures that can attack
+                    comp = CardLists.filter(comp, new Predicate<Card>() {
+                        @Override
+                        public boolean apply(final Card c) {
+                            return CombatUtil.canAttack(c, opp);
+                        }
+                    });
+                    if (comp.size() == 0) {
                         continue;
                     }
                     final List<Card> attackers = comp;
