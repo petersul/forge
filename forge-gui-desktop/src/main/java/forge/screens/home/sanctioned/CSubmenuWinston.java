@@ -153,7 +153,7 @@ public enum CSubmenuWinston implements ICDoc {
     /** */
     private void setupDraft() {
         // Determine what kind of booster draft to run
-        final LimitedPoolType poolType = GuiChoose.oneOrNone("Choose Draft Format", LimitedPoolType.values());
+        final LimitedPoolType poolType = GuiChoose.oneOrNone("Choose Draft Format", LimitedPoolType.values(true));
         if (poolType == null) { return; }
 
         final WinstonDraft draft = WinstonDraft.createDraft(poolType);
