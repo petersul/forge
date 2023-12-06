@@ -11,6 +11,7 @@
         <sign.alias>alias</sign.alias>
         <sign.storepass>storepass</sign.storepass>
         <sign.keypass>keypass</sign.keypass>
+        <cardforge.server>ftp.cardforge.org</cardforge.server>
     </properties>
 
     <parent>
